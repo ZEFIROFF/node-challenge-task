@@ -1,9 +1,10 @@
-import { Injectable, Logger } from "@nestjs/common";
+import { Injectable, Logger } from '@nestjs/common';
+
 // fixme: это я где то нашел в прошлых проектах, подумать над упрощением
 export enum CircuitBreakerState {
-  CLOSED = "closed",
-  OPEN = "open",
-  HALF_OPEN = "half_open",
+  CLOSED = 'closed',
+  OPEN = 'open',
+  HALF_OPEN = 'half_open',
 }
 
 export interface CircuitBreakerOptions {
@@ -83,7 +84,7 @@ export class CircuitBreakerService {
     return Promise.race([
       operation(),
       new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error("Operation timeout")), timeout),
+        setTimeout(() => reject(new Error('Operation timeout')), timeout),
       ),
     ]);
   }

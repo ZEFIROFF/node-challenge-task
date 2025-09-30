@@ -1,8 +1,9 @@
-import { Injectable, Logger, Inject } from "@nestjs/common";
-import { ConfigType } from "@nestjs/config";
-import { PrismaService } from "../../../database/prisma.service";
-import { OutboxEvent, OutboxEventStatus } from "@prisma/client";
-import { kafkaConfig } from "../../../common/config";
+import { Inject, Injectable, Logger } from '@nestjs/common';
+import { ConfigType } from '@nestjs/config';
+import { OutboxEvent, OutboxEventStatus } from '@prisma/client';
+
+import { kafkaConfig } from '../../../common/config';
+import { PrismaService } from '../../../database/prisma.service';
 
 @Injectable()
 export class OutboxService {
@@ -22,15 +23,15 @@ export class OutboxService {
       newPrice: number;
       timestamp?: Date;
     },
-    prismaTransaction?: Parameters<Parameters<PrismaService["$transaction"]>[0]>[0],
+    prismaTransaction?: Parameters<Parameters<PrismaService['$transaction']>[0]>[0],
   ): Promise<OutboxEvent> {
     const prismaClient = prismaTransaction || this.prisma;
 
     const savedEvent = await prismaClient.outboxEvent.create({
       data: {
-        eventType: "token.price.updated",
+        eventType: 'token.price.updated',
         aggregateId: priceUpdateData.tokenId,
-        aggregateType: "token",
+        aggregateType: 'token',
         payload: {
           tokenId: priceUpdateData.tokenId,
           symbol: priceUpdateData.symbol,
@@ -51,7 +52,7 @@ export class OutboxService {
   async getPendingEvents(limit = 100): Promise<OutboxEvent[]> {
     return this.prisma.outboxEvent.findMany({
       where: { status: OutboxEventStatus.PENDING },
-      orderBy: { createdAt: "asc" },
+      orderBy: { createdAt: 'asc' },
       take: limit,
     });
   }
@@ -97,7 +98,7 @@ export class OutboxService {
         status: OutboxEventStatus.FAILED,
         retryCount: { lt: maxRetries },
       },
-      orderBy: { createdAt: "asc" },
+      orderBy: { createdAt: 'asc' },
     });
   }
 

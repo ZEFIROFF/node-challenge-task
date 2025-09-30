@@ -1,7 +1,8 @@
-import { Injectable, Logger, OnModuleInit, OnModuleDestroy, Inject } from "@nestjs/common";
-import { ConfigType } from "@nestjs/config";
-import { Kafka, Producer, logLevel } from "kafkajs";
-import { kafkaConfig } from "../../../common/config";
+import { Inject, Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
+import { ConfigType } from '@nestjs/config';
+import { Kafka, logLevel, Producer } from 'kafkajs';
+
+import { kafkaConfig } from '../../../common/config';
 
 @Injectable()
 export class KafkaProducerService implements OnModuleInit, OnModuleDestroy {
@@ -36,7 +37,7 @@ export class KafkaProducerService implements OnModuleInit, OnModuleDestroy {
     try {
       await this.producer.connect();
       this.isConnected = true;
-      this.logger.log("Successfully connected to Kafka");
+      this.logger.log('Successfully connected to Kafka');
     } catch (error) {
       this.logger.error(`Failed to connect to Kafka: ${error.message}`, error.stack);
       throw error;
@@ -48,7 +49,7 @@ export class KafkaProducerService implements OnModuleInit, OnModuleDestroy {
       if (this.isConnected) {
         await this.producer.disconnect();
         this.isConnected = false;
-        this.logger.log("Disconnected from Kafka");
+        this.logger.log('Disconnected from Kafka');
       }
     } catch (error) {
       this.logger.error(`Error disconnecting from Kafka: ${error.message}`, error.stack);
@@ -63,7 +64,7 @@ export class KafkaProducerService implements OnModuleInit, OnModuleDestroy {
   }): Promise<void> {
     try {
       if (!this.isConnected) {
-        this.logger.warn("Kafka producer not connected, attempting to reconnect...");
+        this.logger.warn('Kafka producer not connected, attempting to reconnect...');
         await this.connect();
       }
 

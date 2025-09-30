@@ -1,6 +1,7 @@
-import { Injectable } from "@nestjs/common";
-import { HealthIndicator, HealthIndicatorResult, HealthCheckError } from "@nestjs/terminus";
-import { OutboxProcessorService } from "../../../modules/messaging/services/outbox-processor.service";
+import { Injectable } from '@nestjs/common';
+import { HealthCheckError, HealthIndicator, HealthIndicatorResult } from '@nestjs/terminus';
+
+import { OutboxProcessorService } from '../../../modules/messaging/services/outbox-processor.service';
 
 @Injectable()
 export class OutboxHealthIndicator extends HealthIndicator {
@@ -24,7 +25,7 @@ export class OutboxHealthIndicator extends HealthIndicator {
       }
 
       throw new HealthCheckError(
-        "Outbox check failed",
+        'Outbox check failed',
         this.getStatus(key, false, {
           message: `Outbox overloaded: ${totalPending} pending events (max: ${maxPending})`,
           pending: stats.outboxStats.pending,
@@ -38,7 +39,7 @@ export class OutboxHealthIndicator extends HealthIndicator {
       }
 
       throw new HealthCheckError(
-        "Outbox check failed",
+        'Outbox check failed',
         this.getStatus(key, false, { message: error.message }),
       );
     }

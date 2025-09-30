@@ -1,13 +1,13 @@
 import {
-  ExceptionFilter,
-  Catch,
   ArgumentsHost,
+  Catch,
+  ExceptionFilter,
   HttpException,
   HttpStatus,
   Logger,
-} from "@nestjs/common";
-import { Response } from "express";
-import { Prisma } from "@prisma/client";
+} from '@nestjs/common';
+import { Prisma } from '@prisma/client';
+import { Response } from 'express';
 
 interface ErrorResponse {
   statusCode: number;
@@ -30,7 +30,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
 
     this.logger.error(
       `[${errorResponse.error}] ${errorResponse.message}`,
-      exception instanceof Error ? exception.stack : "No stack trace",
+      exception instanceof Error ? exception.stack : 'No stack trace',
     );
 
     response.status(errorResponse.statusCode).json(errorResponse);
@@ -44,7 +44,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       const status = exception.getStatus();
       const exceptionResponse = exception.getResponse();
 
-      if (typeof exceptionResponse === "string") {
+      if (typeof exceptionResponse === 'string') {
         return {
           statusCode: status,
           timestamp,
@@ -52,7 +52,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
           error: exception.name,
           path,
         };
-      } else if (typeof exceptionResponse === "object") {
+      } else if (typeof exceptionResponse === 'object') {
         return {
           statusCode: status,
           timestamp,
@@ -72,8 +72,8 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       return {
         statusCode: HttpStatus.BAD_REQUEST,
         timestamp,
-        message: "Validation error in database operation",
-        error: "PrismaValidationError",
+        message: 'Validation error in database operation',
+        error: 'PrismaValidationError',
         path,
       };
     }
@@ -93,8 +93,8 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     return {
       statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
       timestamp,
-      message: "Internal server error",
-      error: "UnknownError",
+      message: 'Internal server error',
+      error: 'UnknownError',
       path,
     };
   }
@@ -105,30 +105,30 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     path: string,
   ): ErrorResponse {
     switch (exception.code) {
-      case "P2002":
+      case 'P2002':
         return {
           statusCode: HttpStatus.CONFLICT,
           timestamp,
           message: `Unique constraint failed on field: ${(exception.meta?.target as string[])?.join(
-            ", ",
+            ', ',
           )}`,
-          error: "UniqueConstraintViolation",
+          error: 'UniqueConstraintViolation',
           path,
         };
-      case "P2025":
+      case 'P2025':
         return {
           statusCode: HttpStatus.NOT_FOUND,
           timestamp,
-          message: "Record not found",
-          error: "RecordNotFound",
+          message: 'Record not found',
+          error: 'RecordNotFound',
           path,
         };
-      case "P2003":
+      case 'P2003':
         return {
           statusCode: HttpStatus.BAD_REQUEST,
           timestamp,
-          message: "Foreign key constraint failed",
-          error: "ForeignKeyConstraintViolation",
+          message: 'Foreign key constraint failed',
+          error: 'ForeignKeyConstraintViolation',
           path,
         };
       default:

@@ -1,11 +1,11 @@
-import { Expose, Transform } from "class-transformer";
+import { Expose, Transform } from 'class-transformer';
 
 export class TokenResponseDto {
   @Expose()
   id: string;
 
   @Expose()
-  @Transform(({ value }) => value?.toString("hex"))
+  @Transform(({ value }) => value?.toString('hex'))
   address: string;
 
   @Expose()

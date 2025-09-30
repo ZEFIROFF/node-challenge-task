@@ -1,12 +1,13 @@
-import { Injectable, Logger, OnModuleInit, OnModuleDestroy, Inject } from "@nestjs/common";
-import { ConfigType } from "@nestjs/config";
-import { SchedulerRegistry } from "@nestjs/schedule";
-import { PrismaService } from "../../../database/prisma.service";
-import { TokenService } from "../../token/services/token.service";
-import { MockPriceService } from "./mock-price.service";
-import { OutboxService } from "../../messaging/services/outbox.service";
-import { appConfig } from "../../../common/config";
-import { Token } from "@prisma/client";
+import { Inject, Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
+import { ConfigType } from '@nestjs/config';
+import { SchedulerRegistry } from '@nestjs/schedule';
+import { Token } from '@prisma/client';
+
+import { appConfig } from '../../../common/config';
+import { PrismaService } from '../../../database/prisma.service';
+import { OutboxService } from '../../messaging/services/outbox.service';
+import { TokenService } from '../../token/services/token.service';
+import { MockPriceService } from './mock-price.service';
 
 @Injectable()
 export class TokenPriceUpdateService implements OnModuleInit, OnModuleDestroy {
@@ -14,7 +15,7 @@ export class TokenPriceUpdateService implements OnModuleInit, OnModuleDestroy {
   private readonly updateIntervalSeconds: number;
   private readonly batchSize: number;
   private readonly minChangeThresholdPercent: number;
-  private readonly timerName = "token-price-update-interval";
+  private readonly timerName = 'token-price-update-interval';
 
   private isRunning = false;
   private isProcessing = false;
@@ -43,7 +44,7 @@ export class TokenPriceUpdateService implements OnModuleInit, OnModuleDestroy {
 
   start(): void {
     if (this.isRunning) {
-      this.logger.warn("Price update service is already enabled");
+      this.logger.warn('Price update service is already enabled');
       return;
     }
 
@@ -58,19 +59,19 @@ export class TokenPriceUpdateService implements OnModuleInit, OnModuleDestroy {
 
   stop(): void {
     if (!this.isRunning) {
-      this.logger.warn("Price update service is not enabled");
+      this.logger.warn('Price update service is not enabled');
       return;
     }
 
     this.unregisterInterval();
     this.isRunning = false;
-    this.logger.log("Price update service disabled");
+    this.logger.log('Price update service disabled');
   }
 
   private registerInterval(): void {
     const milliseconds = this.updateIntervalSeconds * 1000;
 
-    const existingInterval = this.schedulerRegistry.doesExist("interval", this.timerName);
+    const existingInterval = this.schedulerRegistry.doesExist('interval', this.timerName);
     if (existingInterval) {
       this.unregisterInterval();
     }
@@ -83,7 +84,7 @@ export class TokenPriceUpdateService implements OnModuleInit, OnModuleDestroy {
   }
 
   private unregisterInterval(): void {
-    if (this.schedulerRegistry.doesExist("interval", this.timerName)) {
+    if (this.schedulerRegistry.doesExist('interval', this.timerName)) {
       const interval = this.schedulerRegistry.getInterval(this.timerName);
       clearInterval(interval);
       this.schedulerRegistry.deleteInterval(this.timerName);
@@ -96,7 +97,7 @@ export class TokenPriceUpdateService implements OnModuleInit, OnModuleDestroy {
     }
 
     if (this.isProcessing) {
-      this.logger.warn("Price update cycle skipped: previous cycle still in progress");
+      this.logger.warn('Price update cycle skipped: previous cycle still in progress');
       return;
     }
 
@@ -115,7 +116,7 @@ export class TokenPriceUpdateService implements OnModuleInit, OnModuleDestroy {
       const tokens = await this.tokenService.findAll();
 
       if (tokens.length === 0) {
-        this.logger.warn("No tokens found to update prices");
+        this.logger.warn('No tokens found to update prices');
         return;
       }
 
@@ -127,7 +128,7 @@ export class TokenPriceUpdateService implements OnModuleInit, OnModuleDestroy {
         await Promise.allSettled(batch.map((token) => this.updateTokenPrice(token)));
       }
 
-      this.logger.log("Price update cycle completed");
+      this.logger.log('Price update cycle completed');
     } catch (error) {
       this.logger.error(`Failed to update prices: ${error.message}`, error.stack);
       throw error;
@@ -145,7 +146,7 @@ export class TokenPriceUpdateService implements OnModuleInit, OnModuleDestroy {
       }
 
       if (oldPrice === newPrice) {
-        this.logger.debug(`No price change detected for ${token.symbol ?? "UNKNOWN"}`);
+        this.logger.debug(`No price change detected for ${token.symbol ?? 'UNKNOWN'}`);
         return;
       }
 
@@ -162,7 +163,7 @@ export class TokenPriceUpdateService implements OnModuleInit, OnModuleDestroy {
           await this.outboxService.createPriceUpdateEvent(
             {
               tokenId: token.id,
-              symbol: token.symbol ?? "UNKNOWN",
+              symbol: token.symbol ?? 'UNKNOWN',
               oldPrice,
               newPrice,
               timestamp: new Date(),
@@ -173,19 +174,19 @@ export class TokenPriceUpdateService implements OnModuleInit, OnModuleDestroy {
 
         this.logger.log(
           `Price updated for ${
-            token.symbol ?? "UNKNOWN"
+            token.symbol ?? 'UNKNOWN'
           }: ${oldPrice} -> ${newPrice} (${priceChangePercent.toFixed(2)}% change)`,
         );
       } else {
         this.logger.debug(
           `Skipping price update for ${
-            token.symbol ?? "UNKNOWN"
+            token.symbol ?? 'UNKNOWN'
           }: change too small (${priceChangePercent.toFixed(2)}%)`,
         );
       }
     } catch (error) {
       this.logger.error(
-        `Failed to update price for token ${token.id} (${token.symbol ?? "UNKNOWN"}): ${
+        `Failed to update price for token ${token.id} (${token.symbol ?? 'UNKNOWN'}): ${
           error.message
         }`,
         error.stack,

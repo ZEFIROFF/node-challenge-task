@@ -1,5 +1,6 @@
-import { Module, Global } from "@nestjs/common";
-import { CircuitBreakerService } from "./circuit-breaker.service";
+import { Global, Module } from '@nestjs/common';
+
+import { CircuitBreakerService } from './circuit-breaker.service';
 
 @Global()
 @Module({

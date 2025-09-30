@@ -1,18 +1,19 @@
 # Token Price Service Challenge
 
-This repository contains a Node.js challenge task implementing a Token Price Service with intentional anti-patterns and bugs for educational purposes.
+This repository contains a Node.js challenge task implementing a Token Price Service with intentional anti-patterns and
+bugs for educational purposes.
 
 ## Project Structure
 
 The repository is organized as follows:
 
 - **src/**: The main project directory containing:
-  - **data/**: Database context and seeder
-  - **kafka/**: Kafka producer service
-  - **migrations/**: Database migrations
-  - **models/**: Token and message models
-  - **services/**: Price update and mock services
-  - **test/**: Integration tests
+    - **data/**: Database context and seeder
+    - **kafka/**: Kafka producer service
+    - **migrations/**: Database migrations
+    - **models/**: Token and message models
+    - **services/**: Price update and mock services
+    - **test/**: Integration tests
 
 ## Technology Stack
 

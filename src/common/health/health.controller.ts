@@ -1,17 +1,19 @@
-import { Controller, Get } from "@nestjs/common";
+import { Controller, Get } from '@nestjs/common';
 import {
+  DiskHealthIndicator,
   HealthCheck,
   HealthCheckService,
   MemoryHealthIndicator,
-  DiskHealthIndicator,
-} from "@nestjs/terminus";
-import { PrismaHealthIndicator } from "./indicators/prisma.health";
-import { KafkaHealthIndicator } from "./indicators/kafka.health";
-import { OutboxHealthIndicator } from "./indicators/outbox.health";
-import { CircuitBreakerHealthIndicator } from "./indicators/circuit-breaker.health";
+} from '@nestjs/terminus';
 
-//todo: добавить ридмишку
-@Controller("health")
+import {
+  CircuitBreakerHealthIndicator,
+  KafkaHealthIndicator,
+  OutboxHealthIndicator,
+  PrismaHealthIndicator,
+} from './indicators';
+
+@Controller('health')
 export class HealthController {
   constructor(
     private readonly health: HealthCheckService,
@@ -27,61 +29,61 @@ export class HealthController {
   @HealthCheck()
   check() {
     return this.health.check([
-      () => this.prismaHealth.isHealthy("database"),
-      () => this.kafkaHealth.isHealthy("kafka"),
-      () => this.outboxHealth.isHealthy("outbox", 1000),
-      () => this.circuitBreakerHealth.isHealthy("priceService", "MockPriceService"),
-      () => this.memory.checkHeap("memory_heap", 300 * 1024 * 1024),
+      () => this.prismaHealth.isHealthy('database'),
+      () => this.kafkaHealth.isHealthy('kafka'),
+      () => this.outboxHealth.isHealthy('outbox', 1000),
+      () => this.circuitBreakerHealth.isHealthy('priceService', 'MockPriceService'),
+      () => this.memory.checkHeap('memory_heap', 300 * 1024 * 1024),
       () =>
-        this.disk.checkStorage("storage", {
-          path: "/",
+        this.disk.checkStorage('storage', {
+          path: '/',
           thresholdPercent: 0.9,
         }),
     ]);
   }
 
-  @Get("database")
+  @Get('database')
   @HealthCheck()
   checkDatabase() {
-    return this.health.check([() => this.prismaHealth.isHealthy("database")]);
+    return this.health.check([() => this.prismaHealth.isHealthy('database')]);
   }
 
-  @Get("kafka")
+  @Get('kafka')
   @HealthCheck()
   checkKafka() {
-    return this.health.check([() => this.kafkaHealth.isHealthy("kafka")]);
+    return this.health.check([() => this.kafkaHealth.isHealthy('kafka')]);
   }
 
-  @Get("outbox")
+  @Get('outbox')
   @HealthCheck()
   checkOutbox() {
-    return this.health.check([() => this.outboxHealth.isHealthy("outbox", 1000)]);
+    return this.health.check([() => this.outboxHealth.isHealthy('outbox', 1000)]);
   }
 
-  @Get("circuit-breaker")
+  @Get('circuit-breaker')
   @HealthCheck()
   checkCircuitBreaker() {
     return this.health.check([
-      () => this.circuitBreakerHealth.isHealthy("priceService", "MockPriceService"),
+      () => this.circuitBreakerHealth.isHealthy('priceService', 'MockPriceService'),
     ]);
   }
 
-  @Get("memory")
+  @Get('memory')
   @HealthCheck()
   checkMemory() {
     return this.health.check([
-      () => this.memory.checkHeap("memory_heap", 300 * 1024 * 1024),
-      () => this.memory.checkRSS("memory_rss", 300 * 1024 * 1024),
+      () => this.memory.checkHeap('memory_heap', 300 * 1024 * 1024),
+      () => this.memory.checkRSS('memory_rss', 300 * 1024 * 1024),
     ]);
   }
 
-  @Get("disk")
+  @Get('disk')
   @HealthCheck()
   checkDisk() {
     return this.health.check([
       () =>
-        this.disk.checkStorage("storage", {
-          path: "/",
+        this.disk.checkStorage('storage', {
+          path: '/',
           thresholdPercent: 0.9,
         }),
     ]);

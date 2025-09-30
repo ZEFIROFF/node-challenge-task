@@ -1,17 +1,18 @@
-import { Injectable, Logger, OnModuleInit, OnModuleDestroy, Inject } from "@nestjs/common";
-import { ConfigType } from "@nestjs/config";
-import { SchedulerRegistry } from "@nestjs/schedule";
-import { OutboxService } from "./outbox.service";
-import { KafkaProducerService } from "./kafka-producer.service";
-import { OutboxEvent } from "@prisma/client";
-import { outboxConfig } from "../../../common/config";
+import { Inject, Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
+import { ConfigType } from '@nestjs/config';
+import { SchedulerRegistry } from '@nestjs/schedule';
+import { OutboxEvent } from '@prisma/client';
+
+import { outboxConfig } from '../../../common/config';
+import { KafkaProducerService } from './kafka-producer.service';
+import { OutboxService } from './outbox.service';
 
 // todo: подумать над упрощение
 @Injectable()
 export class OutboxProcessorService implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(OutboxProcessorService.name);
-  private readonly processingIntervalName = "outbox-processing-interval";
-  private readonly retryIntervalName = "outbox-retry-interval";
+  private readonly processingIntervalName = 'outbox-processing-interval';
+  private readonly retryIntervalName = 'outbox-retry-interval';
   private readonly batchSize: number;
   private readonly processingIntervalMs: number;
   private readonly retryIntervalMs: number;
@@ -41,7 +42,7 @@ export class OutboxProcessorService implements OnModuleInit, OnModuleDestroy {
   }
 
   private async startProcessing(): Promise<void> {
-    this.logger.log("Starting outbox processor...");
+    this.logger.log('Starting outbox processor...');
 
     const processingInterval = setInterval(
       () => void this.processPendingEvents(),
@@ -58,13 +59,13 @@ export class OutboxProcessorService implements OnModuleInit, OnModuleDestroy {
   }
 
   private async stopProcessing(): Promise<void> {
-    this.logger.log("Stopping outbox processor...");
+    this.logger.log('Stopping outbox processor...');
 
-    if (this.schedulerRegistry.doesExist("interval", this.processingIntervalName)) {
+    if (this.schedulerRegistry.doesExist('interval', this.processingIntervalName)) {
       this.schedulerRegistry.deleteInterval(this.processingIntervalName);
     }
 
-    if (this.schedulerRegistry.doesExist("interval", this.retryIntervalName)) {
+    if (this.schedulerRegistry.doesExist('interval', this.retryIntervalName)) {
       this.schedulerRegistry.deleteInterval(this.retryIntervalName);
     }
 
@@ -72,7 +73,7 @@ export class OutboxProcessorService implements OnModuleInit, OnModuleDestroy {
       await this.processingPromise;
     }
 
-    this.logger.log("Outbox processor stopped");
+    this.logger.log('Outbox processor stopped');
   }
 
   private async processPendingEvents(): Promise<void> {
@@ -151,7 +152,7 @@ export class OutboxProcessorService implements OnModuleInit, OnModuleDestroy {
     const { kafkaTopic, kafkaKey, payload } = event;
 
     if (!kafkaTopic) {
-      throw new Error("Kafka topic is not specified");
+      throw new Error('Kafka topic is not specified');
     }
 
     await this.kafkaProducer.sendMessage({

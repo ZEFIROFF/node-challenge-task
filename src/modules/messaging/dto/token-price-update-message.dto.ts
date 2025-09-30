@@ -1,5 +1,5 @@
-import { IsString, IsNumber, IsUUID, IsDate, Min } from "class-validator";
-import { Type } from "class-transformer";
+import { Type } from 'class-transformer';
+import { IsDate, IsNumber, IsString, IsUUID, Min } from 'class-validator';
 
 export class TokenPriceUpdateMessageDto {
   @IsUUID()

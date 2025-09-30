@@ -1,6 +1,7 @@
-import { Injectable } from "@nestjs/common";
-import { HealthIndicator, HealthIndicatorResult, HealthCheckError } from "@nestjs/terminus";
-import { CircuitBreakerService, CircuitBreakerState } from "../../circuit-breaker";
+import { Injectable } from '@nestjs/common';
+import { HealthCheckError, HealthIndicator, HealthIndicatorResult } from '@nestjs/terminus';
+
+import { CircuitBreakerService, CircuitBreakerState } from '../../circuit-breaker';
 
 @Injectable()
 export class CircuitBreakerHealthIndicator extends HealthIndicator {
@@ -8,12 +9,12 @@ export class CircuitBreakerHealthIndicator extends HealthIndicator {
     super();
   }
 
-  async isHealthy(key: string, circuitName = "MockPriceService"): Promise<HealthIndicatorResult> {
+  async isHealthy(key: string, circuitName = 'MockPriceService'): Promise<HealthIndicatorResult> {
     const circuitState = this.circuitBreakerService.getState(circuitName);
 
     if (!circuitState) {
       return this.getStatus(key, true, {
-        state: "not_initialized",
+        state: 'not_initialized',
         message: `Circuit breaker '${circuitName}' not yet initialized`,
       });
     }
@@ -29,7 +30,7 @@ export class CircuitBreakerHealthIndicator extends HealthIndicator {
     }
 
     throw new HealthCheckError(
-      "Circuit breaker check failed",
+      'Circuit breaker check failed',
       this.getStatus(key, false, {
         message: `Circuit breaker '${circuitName}' is OPEN (${circuitState.failureCount} failures)`,
         state: circuitState.state,

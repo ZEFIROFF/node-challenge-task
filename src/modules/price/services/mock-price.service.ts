@@ -1,13 +1,14 @@
-import { Injectable, Logger, Inject } from "@nestjs/common";
-import { ConfigType } from "@nestjs/config";
-import { Token } from "@prisma/client";
-import { CircuitBreakerService, CircuitBreakerOptions } from "../../../common/circuit-breaker";
-import { circuitBreakerConfig } from "../../../common/config";
+import { Inject, Injectable, Logger } from '@nestjs/common';
+import { ConfigType } from '@nestjs/config';
+import { Token } from '@prisma/client';
+
+import { CircuitBreakerOptions, CircuitBreakerService } from '../../../common/circuit-breaker';
+import { circuitBreakerConfig } from '../../../common/config';
 
 @Injectable()
 export class MockPriceService {
   private readonly logger = new Logger(MockPriceService.name);
-  private readonly circuitName = "MockPriceService";
+  private readonly circuitName = 'MockPriceService';
   private readonly circuitOptions: CircuitBreakerOptions;
 
   constructor(
@@ -40,12 +41,12 @@ export class MockPriceService {
   private async fetchPrice(token: Token): Promise<number> {
     // Симулируем случайные ошибки для тестирования circuit breaker, 10% вероятность ошибки
     if (Math.random() < 0.1) {
-      throw new Error("Mock API temporary failure");
+      throw new Error('Mock API temporary failure');
     }
     const delay = this.getRandomInt(50, 200);
     await this.sleep(delay);
 
-    const basePrice = this.getBasePriceBySymbol(token.symbol || "UNKNOWN");
+    const basePrice = this.getBasePriceBySymbol(token.symbol || 'UNKNOWN');
     const volatilityFactor = this.getVolatilityFactor();
 
     const newPrice = Math.max(0, basePrice * volatilityFactor);

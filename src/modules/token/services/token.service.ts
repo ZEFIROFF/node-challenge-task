@@ -1,8 +1,9 @@
-import { Injectable, NotFoundException, Logger } from "@nestjs/common";
-import { PrismaService } from "../../../database/prisma.service";
-import { Token } from "@prisma/client";
-import { CreateTokenDto } from "../dto/create-token.dto";
-import { UpdateTokenDto } from "../dto/update-token.dto";
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { Token } from '@prisma/client';
+
+import { PrismaService } from '../../../database/prisma.service';
+import { CreateTokenDto } from '../dto/create-token.dto';
+import { UpdateTokenDto } from '../dto/update-token.dto';
 
 @Injectable()
 export class TokenService {
@@ -33,7 +34,7 @@ export class TokenService {
           chain: true,
           logo: true,
         },
-        orderBy: { priority: "asc" },
+        orderBy: { priority: 'asc' },
       });
       this.logger.log(`Retrieved ${tokens.length} tokens`);
       return tokens;
@@ -71,7 +72,7 @@ export class TokenService {
     try {
       const tokens = await this.prisma.token.findMany({
         where: { symbol },
-        orderBy: { createdAt: "desc" },
+        orderBy: { createdAt: 'desc' },
       });
 
       this.logger.log(`Found ${tokens.length} tokens with symbol ${symbol}`);
@@ -92,7 +93,7 @@ export class TokenService {
       this.logger.log(`Token ${id} updated successfully`);
       return updatedToken;
     } catch (error) {
-      if (error.code === "P2025") {
+      if (error.code === 'P2025') {
         // Не магическое число, это Prisma error code for record not found
         throw new NotFoundException(`Token with ID ${id} not found`);
       }
@@ -114,7 +115,7 @@ export class TokenService {
       this.logger.log(`Updated price for token ${updatedToken.symbol}: ${price}`);
       return updatedToken;
     } catch (error) {
-      if (error.code === "P2025") {
+      if (error.code === 'P2025') {
         // Не магическое число, это Prisma error code for record not found
         throw new NotFoundException(`Token with ID ${id} not found`);
       }
@@ -126,7 +127,7 @@ export class TokenService {
   async updatePriceInTransaction(
     id: string,
     price: number,
-    prismaTransaction: Parameters<Parameters<PrismaService["$transaction"]>[0]>[0],
+    prismaTransaction: Parameters<Parameters<PrismaService['$transaction']>[0]>[0],
   ): Promise<Token> {
     try {
       const updatedToken = await prismaTransaction.token.update({
@@ -140,7 +141,7 @@ export class TokenService {
       this.logger.log(`Updated price for token ${updatedToken.symbol}: ${price} (in transaction)`);
       return updatedToken;
     } catch (error) {
-      if (error.code === "P2025") {
+      if (error.code === 'P2025') {
         // Не магическое число, это Prisma error code for record not found
         throw new NotFoundException(`Token with ID ${id} not found`);
       }
@@ -159,7 +160,7 @@ export class TokenService {
       });
       this.logger.log(`Token ${id} removed successfully`);
     } catch (error) {
-      if (error.code === "P2025") {
+      if (error.code === 'P2025') {
         // Не магическое число, это Prisma error code for record not found
         throw new NotFoundException(`Token with ID ${id} not found`);
       }

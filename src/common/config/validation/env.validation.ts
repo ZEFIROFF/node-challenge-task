@@ -1,19 +1,19 @@
-import { plainToInstance, Transform, Type } from "class-transformer";
+import { plainToInstance, Transform, Type } from 'class-transformer';
 import {
-  validateSync,
+  IsArray,
   IsEnum,
   IsNumber,
-  IsString,
-  IsArray,
-  Min,
-  Max,
   IsOptional,
-} from "class-validator";
+  IsString,
+  Max,
+  Min,
+  validateSync,
+} from 'class-validator';
 
 export enum Environment {
-  DEVELOPMENT = "development",
-  PRODUCTION = "production",
-  TEST = "test",
+  DEVELOPMENT = 'development',
+  PRODUCTION = 'production',
+  TEST = 'test',
 }
 
 class EnvironmentVariables {
@@ -51,7 +51,7 @@ class EnvironmentVariables {
   // Database config
   @IsString()
   @IsOptional()
-  DB_HOST = "localhost";
+  DB_HOST = 'localhost';
 
   @Type(() => Number)
   @IsNumber()
@@ -62,34 +62,34 @@ class EnvironmentVariables {
 
   @IsString()
   @IsOptional()
-  DB_USERNAME = "postgres";
+  DB_USERNAME = 'postgres';
 
   @IsString()
   @IsOptional()
-  DB_PASSWORD = "postgres";
+  DB_PASSWORD = 'postgres';
 
   @IsString()
   @IsOptional()
-  DB_DATABASE = "tokens";
+  DB_DATABASE = 'tokens';
 
   @IsString()
   @IsOptional()
   DATABASE_URL?: string;
 
   // Kafka config
-  @Transform(({ value }) => value?.split(",") || ["localhost:9092"])
+  @Transform(({ value }) => value?.split(',') || ['localhost:9092'])
   @IsArray()
   @IsString({ each: true })
   @IsOptional()
-  KAFKA_BROKERS: string[] = ["localhost:9092"];
+  KAFKA_BROKERS: string[] = ['localhost:9092'];
 
   @IsString()
   @IsOptional()
-  KAFKA_CLIENT_ID = "token-price-service";
+  KAFKA_CLIENT_ID = 'token-price-service';
 
   @IsString()
   @IsOptional()
-  KAFKA_TOPIC = "token-price-updates";
+  KAFKA_TOPIC = 'token-price-updates';
 
   // Circuit Breaker config
   @Type(() => Number)

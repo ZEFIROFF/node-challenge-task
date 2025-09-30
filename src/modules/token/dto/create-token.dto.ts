@@ -1,18 +1,18 @@
+import { Transform } from 'class-transformer';
 import {
-  IsString,
-  IsNumber,
   IsBoolean,
-  IsUUID,
-  IsOptional,
-  Min,
-  Max,
   IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsString,
+  IsUUID,
+  Max,
   MaxLength,
-} from "class-validator";
-import { Transform } from "class-transformer";
+  Min,
+} from 'class-validator';
 
 export class CreateTokenDto {
-  @Transform(({ value }) => Buffer.from(value, "hex"))
+  @Transform(({ value }) => Buffer.from(value, 'hex'))
   address: Buffer;
 
   @IsString()

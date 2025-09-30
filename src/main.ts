@@ -1,31 +1,32 @@
-import { NestFactory } from "@nestjs/core";
-import { AppModule } from "./app.module";
-import { Logger } from "@nestjs/common";
-import { ConfigService } from "@nestjs/config";
+import { Logger } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { NestFactory } from '@nestjs/core';
+
+import { AppModule } from './app.module';
 
 async function bootstrap() {
-  const logger = new Logger("Bootstrap");
+  const logger = new Logger('Bootstrap');
 
   try {
-    logger.log("Starting Token Price Service...");
+    logger.log('Starting Token Price Service...');
 
     const app = await NestFactory.create(AppModule, {
       bufferLogs: true,
-      logger: ["error", "warn", "log"],
+      logger: ['error', 'warn', 'log'],
     });
 
     app.useLogger(app.get(Logger));
 
     const configService = app.get(ConfigService);
-    const nodeEnv = configService.get<string>("NODE_ENV", "development");
-    const port = configService.get<number>("PORT", 3000);
-    const logLevel = configService.get<string>("LOG_LEVEL", "log");
+    const nodeEnv = configService.get<string>('NODE_ENV', 'development');
+    const port = configService.get<number>('PORT', 3000);
+    const logLevel = configService.get<string>('LOG_LEVEL', 'log');
 
     // kjubth
-    if (logLevel === "debug") {
-      app.useLogger(["error", "warn", "log", "debug", "verbose"]);
-    } else if (logLevel === "verbose") {
-      app.useLogger(["error", "warn", "log", "verbose"]);
+    if (logLevel === 'debug') {
+      app.useLogger(['error', 'warn', 'log', 'debug', 'verbose']);
+    } else if (logLevel === 'verbose') {
+      app.useLogger(['error', 'warn', 'log', 'verbose']);
     }
 
     app.enableShutdownHooks();

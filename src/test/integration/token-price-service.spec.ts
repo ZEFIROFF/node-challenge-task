@@ -1,17 +1,17 @@
-import { Test, TestingModule } from "@nestjs/testing";
-import { ConfigModule } from "@nestjs/config";
-import { DatabaseModule } from "../../database/database.module";
-import { GenericContainer, StartedTestContainer } from "testcontainers";
-import { Kafka, Consumer, KafkaMessage } from "kafkajs";
-import { Token } from "@prisma/client";
-import { TokenPriceUpdateService } from "../../modules/price/services/token-price-update.service";
-import { MockPriceService } from "../../modules/price/services/mock-price.service";
-import { KafkaProducerService } from "../../modules/messaging/services/kafka-producer.service";
-import { TokenService } from "../../modules/token/services/token.service";
-import { TokenPriceUpdateMessageDto } from "../../modules/messaging/dto/token-price-update-message.dto";
-import { PrismaService } from "../../database/prisma.service";
+import { ConfigModule } from '@nestjs/config';
+import { Test, TestingModule } from '@nestjs/testing';
+import { Consumer, Kafka } from 'kafkajs';
+import { GenericContainer, StartedTestContainer } from 'testcontainers';
 
-describe("TokenPriceService Integration Tests", () => {
+import { DatabaseModule } from '../../database/database.module';
+import { PrismaService } from '../../database/prisma.service';
+import { TokenPriceUpdateMessageDto } from '../../modules/messaging/dto/token-price-update-message.dto';
+import { KafkaProducerService } from '../../modules/messaging/services/kafka-producer.service';
+import { MockPriceService } from '../../modules/price/services/mock-price.service';
+import { TokenPriceUpdateService } from '../../modules/price/services/token-price-update.service';
+import { TokenService } from '../../modules/token/services/token.service';
+
+describe('TokenPriceService Integration Tests', () => {
   let postgresContainer: StartedTestContainer;
   let zookeeperContainer: StartedTestContainer;
   let kafkaContainer: StartedTestContainer;
@@ -20,7 +20,7 @@ describe("TokenPriceService Integration Tests", () => {
   let tokenPriceUpdateService: TokenPriceUpdateService;
   let kafkaConsumer: Consumer;
 
-  const kafkaTopic = "token-price-updates";
+  const kafkaTopic = 'token-price-updates';
   const testId = Math.random().toString(36).substring(7);
 
   const getAvailablePort = async (): Promise<number> => {
@@ -38,12 +38,12 @@ describe("TokenPriceService Integration Tests", () => {
       const postgresPort = await getAvailablePort();
 
       // Start PostgreSQL container
-      postgresContainer = await new GenericContainer("postgres:15-alpine")
+      postgresContainer = await new GenericContainer('postgres:15-alpine')
         .withName(`postgres-test-${testId}`)
         .withEnvironment({
-          POSTGRES_USER: "testuser",
-          POSTGRES_PASSWORD: "testpassword",
-          POSTGRES_DB: "testdb",
+          POSTGRES_USER: 'testuser',
+          POSTGRES_PASSWORD: 'testpassword',
+          POSTGRES_DB: 'testdb',
         })
         .withExposedPorts(51214)
         .start();
@@ -52,11 +52,11 @@ describe("TokenPriceService Integration Tests", () => {
       const mappedPostgresPort = postgresContainer.getMappedPort(51214);
 
       // Start Zookeeper container (required for Kafka)
-      zookeeperContainer = await new GenericContainer("confluentinc/cp-zookeeper:7.3.0")
+      zookeeperContainer = await new GenericContainer('confluentinc/cp-zookeeper:7.3.0')
         .withName(`zookeeper-test-${testId}`)
         .withEnvironment({
-          ZOOKEEPER_CLIENT_PORT: "2181",
-          ZOOKEEPER_TICK_TIME: "2000",
+          ZOOKEEPER_CLIENT_PORT: '2181',
+          ZOOKEEPER_TICK_TIME: '2000',
         })
         .withExposedPorts(2181)
         .start();
@@ -65,16 +65,16 @@ describe("TokenPriceService Integration Tests", () => {
       await new Promise((resolve) => setTimeout(resolve, 3000));
 
       // Start Kafka container
-      kafkaContainer = await new GenericContainer("confluentinc/cp-kafka:7.3.0")
+      kafkaContainer = await new GenericContainer('confluentinc/cp-kafka:7.3.0')
         .withName(`kafka-test-${testId}`)
         .withEnvironment({
-          KAFKA_BROKER_ID: "1",
+          KAFKA_BROKER_ID: '1',
           KAFKA_ZOOKEEPER_CONNECT: `${zookeeperContainer.getHost()}:${zookeeperContainer.getMappedPort(
             2181,
           )}`,
           KAFKA_ADVERTISED_LISTENERS: `PLAINTEXT://${kafkaContainer.getHost()}:${kafkaPort}`,
-          KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: "1",
-          KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true",
+          KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: '1',
+          KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true',
         })
         .withExposedPorts(9092)
         .start();
@@ -87,11 +87,11 @@ describe("TokenPriceService Integration Tests", () => {
 
       // Setup Kafka consumer
       const kafka = new Kafka({
-        clientId: "test-client",
+        clientId: 'test-client',
         brokers: [`${kafkaHost}:${mappedKafkaPort}`],
       });
 
-      kafkaConsumer = kafka.consumer({ groupId: "test-consumer-group" });
+      kafkaConsumer = kafka.consumer({ groupId: 'test-consumer-group' });
       await kafkaConsumer.connect();
       await kafkaConsumer.subscribe({ topic: kafkaTopic, fromBeginning: true });
 
@@ -121,7 +121,7 @@ describe("TokenPriceService Integration Tests", () => {
       prisma = moduleRef.get<PrismaService>(PrismaService);
       tokenPriceUpdateService = moduleRef.get<TokenPriceUpdateService>(TokenPriceUpdateService);
     } catch (error) {
-      console.error("Error during test setup:", error);
+      console.error('Error during test setup:', error);
       throw error;
     }
   }, 120000);
@@ -148,12 +148,12 @@ describe("TokenPriceService Integration Tests", () => {
     }
   }, 30000);
 
-  it("should update token price and send Kafka message", async () => {
+  it('should update token price and send Kafka message', async () => {
     // Create test chain
     const chain = await prisma.chain.create({
       data: {
         deId: 99,
-        name: "Test Chain",
+        name: 'Test Chain',
         isEnabled: true,
       },
     });
@@ -161,9 +161,9 @@ describe("TokenPriceService Integration Tests", () => {
     // Create test logo
     const logo = await prisma.logo.create({
       data: {
-        bigRelativePath: "/test.png",
-        smallRelativePath: "/test_small.png",
-        thumbRelativePath: "/test_thumb.png",
+        bigRelativePath: '/test.png',
+        smallRelativePath: '/test_small.png',
+        thumbRelativePath: '/test_thumb.png',
       },
     });
 
@@ -171,8 +171,8 @@ describe("TokenPriceService Integration Tests", () => {
     const token = await prisma.token.create({
       data: {
         address: Buffer.from([0x01, 0x02, 0x03]),
-        symbol: "TEST",
-        name: "Test Token",
+        symbol: 'TEST',
+        name: 'Test Token',
         decimals: 18,
         isNative: false,
         chainId: chain.id,

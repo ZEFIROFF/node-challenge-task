@@ -1,10 +1,12 @@
 # Token Price Service Challenge
 
-This project contains a Node.js/TypeScript/Nest.js application that implements a Token Price Service with intentional anti-patterns and bugs for educational purposes.
+This project contains a Node.js/TypeScript/Nest.js application that implements a Token Price Service with intentional
+anti-patterns and bugs for educational purposes.
 
 ## Challenge Overview
 
-The candidate's task is to identify and fix the anti-patterns and bugs in the codebase. The application is a token price service that:
+The candidate's task is to identify and fix the anti-patterns and bugs in the codebase. The application is a token price
+service that:
 
 1. Maintains information about various tokens (ETH, BTC, SOL, etc.) in a PostgreSQL database
 2. Periodically updates token prices using a mock price service

@@ -1,6 +1,7 @@
-import { Injectable } from "@nestjs/common";
-import { HealthIndicator, HealthIndicatorResult, HealthCheckError } from "@nestjs/terminus";
-import { KafkaProducerService } from "../../../modules/messaging/services/kafka-producer.service";
+import { Injectable } from '@nestjs/common';
+import { HealthCheckError, HealthIndicator, HealthIndicatorResult } from '@nestjs/terminus';
+
+import { KafkaProducerService } from '../../../modules/messaging/services/kafka-producer.service';
 
 @Injectable()
 export class KafkaHealthIndicator extends HealthIndicator {
@@ -17,14 +18,14 @@ export class KafkaHealthIndicator extends HealthIndicator {
       }
 
       throw new HealthCheckError(
-        "Kafka check failed",
+        'Kafka check failed',
         this.getStatus(key, false, {
-          message: "Kafka producer is not connected",
+          message: 'Kafka producer is not connected',
         }),
       );
     } catch (error) {
       throw new HealthCheckError(
-        "Kafka check failed",
+        'Kafka check failed',
         this.getStatus(key, false, { message: error.message }),
       );
     }
