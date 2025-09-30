@@ -1,0 +1,94 @@
+// todo: 
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Chain {
+  id        String   @id @default(uuid()) @db.Uuid
+  deId      Int      @unique @map("deid")
+  name      String   @unique @db.VarChar(100)
+  isEnabled Boolean  @default(true) @map("is_enabled")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  tokens Token[]
+
+  @@index([isEnabled])
+  @@map("chains")
+}
+
+model Logo {
+  id                String   @id @default(uuid()) @db.Uuid
+  bigRelativePath   String   @map("big_relative_path") @db.VarChar(500)
+  smallRelativePath String   @map("small_relative_path") @db.VarChar(500)
+  thumbRelativePath String   @map("thumb_relative_path") @db.VarChar(500)
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  tokens Token[]
+
+  @@map("logos")
+}
+
+model Token {
+  id               String   @id @default(uuid()) @db.Uuid
+  address          Bytes    @unique
+  symbol           String   @unique @db.VarChar(20)
+  name             String   @db.VarChar(100)
+  decimals         Int      @default(0) @db.SmallInt
+  isNative         Boolean  @default(false) @map("is_native")
+  chainId          String   @map("chain_id") @db.Uuid
+  logoId           String?  @map("logo_id") @db.Uuid
+  isProtected      Boolean  @default(false) @map("is_protected")
+  lastUpdateAuthor String?  @map("last_update_author") @db.VarChar(100)
+  priority         Int      @default(0)
+  price            Decimal  @default(0) @db.Decimal(18, 8)
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  chain Chain @relation(fields: [chainId], references: [id], onDelete: Restrict)
+  logo  Logo? @relation(fields: [logoId], references: [id], onDelete: SetNull)
+
+  @@index([symbol])
+  @@index([chainId])
+  @@index([priority])
+  @@index([updatedAt])
+  @@index([isNative, chainId])
+  @@map("tokens")
+}
+
+model OutboxEvent {
+  id            String            @id @default(uuid()) @db.Uuid
+  eventType     String            @map("event_type") @db.VarChar(100)
+  aggregateId   String            @map("aggregate_id") @db.VarChar(50)
+  aggregateType String            @default("Token") @map("aggregate_type") @db.VarChar(50)
+  payload       Json              @db.JsonB
+  status        OutboxEventStatus @default(PENDING)
+  kafkaTopic    String            @default("token-price-updates") @map("kafka_topic") @db.VarChar(100)
+  kafkaKey      String?           @map("kafka_key") @db.VarChar(100)
+  retryCount    Int               @default(0) @map("retry_count") @db.SmallInt
+  lastError     String?           @map("last_error") @db.Text
+  createdAt     DateTime          @default(now()) @map("created_at")
+  processedAt   DateTime?         @map("processed_at")
+  publishedAt   DateTime?         @map("published_at")
+
+  @@index([status, createdAt], name: "idx_outbox_status_created")
+  @@index([aggregateId, aggregateType], name: "idx_outbox_aggregate")
+  @@index([eventType, status], name: "idx_outbox_type_status")
+  @@index([createdAt], name: "idx_outbox_created_cleanup")
+  @@map("outbox_events")
+}
+
+enum OutboxEventStatus {
+  PENDING
+  PROCESSING
+  PUBLISHED
+  FAILED
+
+  @@map("outbox_event_status")
+}

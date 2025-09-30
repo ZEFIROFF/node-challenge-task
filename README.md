@@ -20,7 +20,7 @@ The repository is organized as follows:
 - **TypeScript**: For type safety
 - **Nest.js**: Node.js framework for building efficient and scalable server-side applications
 - **PostgreSQL**: For data storage
-- **TypeORM**: For database interactions
+- **Prisma**: Modern ORM with type-safe queries and migrations
 - **Kafka.js**: For message brokering
 - **Jest**: For testing
 - **Testcontainers**: For integration testing with Docker containers

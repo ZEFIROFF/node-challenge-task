@@ -1,54 +1,56 @@
-import { Module, OnModuleInit } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { ConfigModule } from '@nestjs/config';
-import { Token } from './models/token.entity';
-import { TokenPriceUpdateService } from './services/token-price-update.service';
-import { MockPriceService } from './services/mock-price.service';
-import { KafkaProducerService } from './kafka/kafka-producer.service';
-import { TokenSeeder } from './data/token.seeder';
+import { Logger, Module, ValidationPipe } from "@nestjs/common";
+import { ConfigModule } from "@nestjs/config";
+import { ScheduleModule } from "@nestjs/schedule";
+import { APP_FILTER, APP_PIPE } from "@nestjs/core";
+import { DatabaseModule } from "./database/database.module";
+import { TokenModule } from "./modules/token/token.module";
+import { MessagingModule } from "./modules/messaging/messaging.module";
+import { PriceModule } from "./modules/price/price.module";
+import { HealthModule } from "./common/health/health.module";
+import { CircuitBreakerModule } from "./common/circuit-breaker";
+import { GlobalExceptionFilter } from "./common/exceptions/global-exception.filter";
+import { validate } from "./common/config/validation/env.validation";
+import { appConfig } from "./common/config/app.config";
+import { databaseConfig } from "./common/config/database.config";
+import { kafkaConfig } from "./common/config/kafka.config";
+import { circuitBreakerConfig } from "./common/config/circuit-breaker.config";
+import { outboxConfig } from "./common/config/outbox.config";
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
+      validate,
+      cache: true,
+      envFilePath: [".env.local", ".env"],
+      ignoreEnvFile: process.env.NODE_ENV === "production",
+      load: [appConfig, databaseConfig, kafkaConfig, circuitBreakerConfig, outboxConfig],
     }),
-    TypeOrmModule.forRoot({
-      type: 'postgres',
-      host: 'localhost',
-      port: 5432,
-      username: 'postgres',
-      password: 'postgres',
-      database: 'tokens',
-      entities: [Token],
-      migrations: [__dirname + '/migrations/*.{js,ts}'],
-      migrationsRun: true, // Run migrations automatically
-      synchronize: false, // Disabled when using migrations
-    }),
-    TypeOrmModule.forFeature([Token]),
+    ScheduleModule.forRoot(),
+    CircuitBreakerModule,
+    DatabaseModule,
+    TokenModule,
+    MessagingModule,
+    PriceModule,
+    HealthModule,
   ],
-  controllers: [],
   providers: [
-    TokenPriceUpdateService,
-    MockPriceService,
-    KafkaProducerService,
-    TokenSeeder,
+    Logger,
+    {
+      provide: APP_FILTER,
+      useClass: GlobalExceptionFilter,
+    },
+    {
+      provide: APP_PIPE,
+      useValue: new ValidationPipe({
+        transform: true,
+        whitelist: true,
+        forbidNonWhitelisted: true,
+        transformOptions: {
+          enableImplicitConversion: true,
+        },
+      }),
+    },
   ],
 })
-export class AppModule implements OnModuleInit {
-  constructor(
-    private readonly tokenSeeder: TokenSeeder,
-    private readonly tokenPriceUpdateService: TokenPriceUpdateService,
-  ) {}
-
-  async onModuleInit() {
-    try {
-      // Seed initial data
-      await this.tokenSeeder.seed();
-      
-      // Start price update service
-      this.tokenPriceUpdateService.start();
-    } catch (error) {
-      console.error('Failed to initialize application:', error);
-    }
-  }
-}
+export class AppModule {}
