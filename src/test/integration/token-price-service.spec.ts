@@ -179,6 +179,13 @@ describe('TokenPriceService Integration Tests', () => {
         logoId: logo.id,
         isProtected: false,
         priority: 1,
+      },
+    });
+
+    // Create initial price
+    await prisma.tokenPrice.create({
+      data: {
+        tokenId: token.id,
         price: 100,
       },
     });
@@ -193,11 +200,11 @@ describe('TokenPriceService Integration Tests', () => {
     tokenPriceUpdateService.stop();
 
     // Check if token price was updated in the database
-    const updatedToken = await prisma.token.findUnique({
-      where: { id: token.id },
+    const updatedPrice = await prisma.tokenPrice.findUnique({
+      where: { tokenId: token.id },
     });
-    expect(updatedToken).toBeDefined();
-    expect(Number(updatedToken!.price)).not.toEqual(100);
+    expect(updatedPrice).toBeDefined();
+    expect(Number(updatedPrice!.price)).not.toEqual(100);
 
     // Note: In a real test, we would also check for Kafka messages,
     // but since we're mocking the KafkaProducerService, we can't do that here

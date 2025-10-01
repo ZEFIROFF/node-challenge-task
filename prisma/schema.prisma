@@ -1,4 +1,3 @@
-// todo: 
 generator client {
   provider = "prisma-client-js"
 }
@@ -46,30 +45,38 @@ model Token {
   logoId           String?  @map("logo_id") @db.Uuid
   isProtected      Boolean  @default(false) @map("is_protected")
   lastUpdateAuthor String?  @map("last_update_author") @db.VarChar(100)
-  priority         Int      @default(0)
-  price            Decimal  @default(0) @db.Decimal(18, 8)
+  priority         Int      @default(0) @db.SmallInt
   createdAt        DateTime @default(now()) @map("created_at")
   updatedAt        DateTime @updatedAt @map("updated_at")
 
-  chain Chain @relation(fields: [chainId], references: [id], onDelete: Restrict)
-  logo  Logo? @relation(fields: [logoId], references: [id], onDelete: SetNull)
+  chain Chain       @relation(fields: [chainId], references: [id], onDelete: Restrict)
+  logo  Logo?       @relation(fields: [logoId], references: [id], onDelete: SetNull)
+  price TokenPrice?
 
-  @@index([symbol])
-  @@index([chainId])
-  @@index([priority])
-  @@index([updatedAt])
-  @@index([isNative, chainId])
+  @@index([chainId, isNative])
+  @@index([priority, chainId])
   @@map("tokens")
+}
+
+model TokenPrice {
+  tokenId   String   @id @map("token_id") @db.Uuid
+  price     Decimal  @db.Decimal(18, 8)
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
+
+  token Token @relation(fields: [tokenId], references: [id], onDelete: Cascade)
+
+  @@index([updatedAt])
+  @@map("token_prices")
 }
 
 model OutboxEvent {
   id            String            @id @default(uuid()) @db.Uuid
   eventType     String            @map("event_type") @db.VarChar(100)
   aggregateId   String            @map("aggregate_id") @db.VarChar(50)
-  aggregateType String            @default("Token") @map("aggregate_type") @db.VarChar(50)
+  aggregateType String            @map("aggregate_type") @db.VarChar(50)
   payload       Json              @db.JsonB
   status        OutboxEventStatus @default(PENDING)
-  kafkaTopic    String            @default("token-price-updates") @map("kafka_topic") @db.VarChar(100)
+  kafkaTopic    String            @map("kafka_topic") @db.VarChar(100)
   kafkaKey      String?           @map("kafka_key") @db.VarChar(100)
   retryCount    Int               @default(0) @map("retry_count") @db.SmallInt
   lastError     String?           @map("last_error") @db.Text
@@ -81,6 +88,7 @@ model OutboxEvent {
   @@index([aggregateId, aggregateType], name: "idx_outbox_aggregate")
   @@index([eventType, status], name: "idx_outbox_type_status")
   @@index([createdAt], name: "idx_outbox_created_cleanup")
+  @@index([retryCount, status], name: "idx_outbox_retry")
   @@map("outbox_events")
 }
 

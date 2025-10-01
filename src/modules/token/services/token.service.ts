@@ -1,6 +1,8 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { Token } from '@prisma/client';
 
+import { PRISMA_ERROR_CODES } from '../../../common/constants';
+import { PrismaTransactionClient } from '../../../common/types';
 import { PrismaService } from '../../../database/prisma.service';
 import { CreateTokenDto } from '../dto/create-token.dto';
 import { UpdateTokenDto } from '../dto/update-token.dto';
@@ -33,6 +35,7 @@ export class TokenService {
         include: {
           chain: true,
           logo: true,
+          price: true,
         },
         orderBy: { priority: 'asc' },
       });
@@ -51,6 +54,7 @@ export class TokenService {
         include: {
           chain: true,
           logo: true,
+          price: true,
         },
       });
 
@@ -93,8 +97,7 @@ export class TokenService {
       this.logger.log(`Token ${id} updated successfully`);
       return updatedToken;
     } catch (error) {
-      if (error.code === 'P2025') {
-        // Не магическое число, это Prisma error code for record not found
+      if (error.code === PRISMA_ERROR_CODES.RECORD_NOT_FOUND) {
         throw new NotFoundException(`Token with ID ${id} not found`);
       }
       this.logger.error(`Failed to update token ${id}: ${error.message}`, error.stack);
@@ -104,19 +107,25 @@ export class TokenService {
 
   async updatePrice(id: string, price: number): Promise<Token> {
     try {
-      const updatedToken = await this.prisma.token.update({
-        where: { id },
-        data: {
-          price: price,
-          // updatedAt автоматически обновится Prisma, поэтому не нужно его обновлять
-        },
+      await this.prisma.tokenPrice.upsert({
+        where: { tokenId: id },
+        create: { tokenId: id, price },
+        update: { price },
       });
 
-      this.logger.log(`Updated price for token ${updatedToken.symbol}: ${price}`);
-      return updatedToken;
+      const token = await this.prisma.token.findUnique({
+        where: { id },
+        include: { price: true },
+      });
+
+      if (!token) {
+        throw new NotFoundException(`Token with ID ${id} not found`);
+      }
+
+      this.logger.log(`Updated price for token ${token.symbol}: ${price}`);
+      return token;
     } catch (error) {
-      if (error.code === 'P2025') {
-        // Не магическое число, это Prisma error code for record not found
+      if (error.code === PRISMA_ERROR_CODES.RECORD_NOT_FOUND) {
         throw new NotFoundException(`Token with ID ${id} not found`);
       }
       this.logger.error(`Failed to update price for token ${id}: ${error.message}`, error.stack);
@@ -127,22 +136,28 @@ export class TokenService {
   async updatePriceInTransaction(
     id: string,
     price: number,
-    prismaTransaction: Parameters<Parameters<PrismaService['$transaction']>[0]>[0],
+    prismaTransaction: PrismaTransactionClient,
   ): Promise<Token> {
     try {
-      const updatedToken = await prismaTransaction.token.update({
-        where: { id },
-        data: {
-          price: price,
-          // updatedAt автоматически обновится Prisma, поэтому не нужно его обновлять
-        },
+      await prismaTransaction.tokenPrice.upsert({
+        where: { tokenId: id },
+        create: { tokenId: id, price },
+        update: { price },
       });
 
-      this.logger.log(`Updated price for token ${updatedToken.symbol}: ${price} (in transaction)`);
-      return updatedToken;
+      const token = await prismaTransaction.token.findUnique({
+        where: { id },
+        include: { price: true },
+      });
+
+      if (!token) {
+        throw new NotFoundException(`Token with ID ${id} not found`);
+      }
+
+      this.logger.log(`Updated price for token ${token.symbol}: ${price} (in transaction)`);
+      return token;
     } catch (error) {
-      if (error.code === 'P2025') {
-        // Не магическое число, это Prisma error code for record not found
+      if (error.code === PRISMA_ERROR_CODES.RECORD_NOT_FOUND) {
         throw new NotFoundException(`Token with ID ${id} not found`);
       }
       this.logger.error(
@@ -160,8 +175,7 @@ export class TokenService {
       });
       this.logger.log(`Token ${id} removed successfully`);
     } catch (error) {
-      if (error.code === 'P2025') {
-        // Не магическое число, это Prisma error code for record not found
+      if (error.code === PRISMA_ERROR_CODES.RECORD_NOT_FOUND) {
         throw new NotFoundException(`Token with ID ${id} not found`);
       }
       this.logger.error(`Failed to remove token ${id}: ${error.message}`, error.stack);

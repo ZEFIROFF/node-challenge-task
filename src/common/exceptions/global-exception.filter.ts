@@ -9,6 +9,8 @@ import {
 import { Prisma } from '@prisma/client';
 import { Response } from 'express';
 
+import { PRISMA_ERROR_CODES } from '../constants';
+
 interface ErrorResponse {
   statusCode: number;
   timestamp: string;
@@ -105,7 +107,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     path: string,
   ): ErrorResponse {
     switch (exception.code) {
-      case 'P2002':
+      case PRISMA_ERROR_CODES.UNIQUE_CONSTRAINT_VIOLATION:
         return {
           statusCode: HttpStatus.CONFLICT,
           timestamp,
@@ -115,7 +117,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
           error: 'UniqueConstraintViolation',
           path,
         };
-      case 'P2025':
+      case PRISMA_ERROR_CODES.RECORD_NOT_FOUND:
         return {
           statusCode: HttpStatus.NOT_FOUND,
           timestamp,
@@ -123,7 +125,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
           error: 'RecordNotFound',
           path,
         };
-      case 'P2003':
+      case PRISMA_ERROR_CODES.FOREIGN_KEY_CONSTRAINT_FAILED:
         return {
           statusCode: HttpStatus.BAD_REQUEST,
           timestamp,
@@ -136,7 +138,9 @@ export class GlobalExceptionFilter implements ExceptionFilter {
           statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
           timestamp,
           message: exception.message,
-          error: `PrismaError:${exception.code}`,
+          error: `PrismaError:${
+            PRISMA_ERROR_CODES[exception.code as keyof typeof PRISMA_ERROR_CODES]
+          }`,
           path,
         };
     }

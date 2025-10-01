@@ -4,6 +4,7 @@ import { SchedulerRegistry } from '@nestjs/schedule';
 import { Token } from '@prisma/client';
 
 import { appConfig } from '../../../common/config';
+import { APP_CONSTANTS } from '../../../common/constants';
 import { PrismaService } from '../../../database/prisma.service';
 import { OutboxService } from '../../messaging/services/outbox.service';
 import { TokenService } from '../../token/services/token.service';
@@ -122,7 +123,6 @@ export class TokenPriceUpdateService implements OnModuleInit, OnModuleDestroy {
 
       this.logger.log(`Updating prices for ${tokens.length} tokens`);
 
-      // обрабатываем токены параллельно, но с контролируем иначе все лочится
       for (let i = 0; i < tokens.length; i += this.batchSize) {
         const batch = tokens.slice(i, i + this.batchSize);
         await Promise.allSettled(batch.map((token) => this.updateTokenPrice(token)));
@@ -135,10 +135,11 @@ export class TokenPriceUpdateService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
-  private async updateTokenPrice(token: Token): Promise<void> {
+  private async updateTokenPrice(token: Token & { price?: { price: any } | null }): Promise<void> {
     try {
-      const oldPrice = Number(token.price);
-      const newPrice = await this.priceService.getRandomPriceForToken(token);
+      const oldPrice = Number(token.price?.price ?? 0);
+      const newPrice = await this.priceService.getRandomPriceForToken(token, oldPrice);
+      const symbol = token.symbol ?? APP_CONSTANTS.UNKNOWN_SYMBOL;
 
       if (Number.isNaN(oldPrice)) {
         this.logger.warn(`Invalid old price for token ${token.id}; skipping update`);
@@ -146,24 +147,21 @@ export class TokenPriceUpdateService implements OnModuleInit, OnModuleDestroy {
       }
 
       if (oldPrice === newPrice) {
-        this.logger.debug(`No price change detected for ${token.symbol ?? 'UNKNOWN'}`);
+        this.logger.debug(`No price change detected for ${symbol}`);
         return;
       }
 
-      // смотрим насколько изменилась цена
       const priceChangePercent = this.calculatePriceChangePercent(oldPrice, newPrice);
 
       if (priceChangePercent >= this.minChangeThresholdPercent) {
         // Используем Prisma транзакцию для атомарного обновления цены и создания outbox события
         await this.prisma.$transaction(async (prismaTransaction) => {
-          // Обновляем цену токена в БД
           await this.tokenService.updatePriceInTransaction(token.id, newPrice, prismaTransaction);
 
-          // Создаем событие в outbox для последующей отправки в Kafka
           await this.outboxService.createPriceUpdateEvent(
             {
               tokenId: token.id,
-              symbol: token.symbol ?? 'UNKNOWN',
+              symbol,
               oldPrice,
               newPrice,
               timestamp: new Date(),
@@ -173,22 +171,21 @@ export class TokenPriceUpdateService implements OnModuleInit, OnModuleDestroy {
         });
 
         this.logger.log(
-          `Price updated for ${
-            token.symbol ?? 'UNKNOWN'
-          }: ${oldPrice} -> ${newPrice} (${priceChangePercent.toFixed(2)}% change)`,
+          `Price updated for ${symbol}: ${oldPrice} -> ${newPrice} (${priceChangePercent.toFixed(
+            2,
+          )}% change)`,
         );
       } else {
         this.logger.debug(
-          `Skipping price update for ${
-            token.symbol ?? 'UNKNOWN'
-          }: change too small (${priceChangePercent.toFixed(2)}%)`,
+          `Skipping price update for ${symbol}: change too small (${priceChangePercent.toFixed(
+            2,
+          )}%)`,
         );
       }
     } catch (error) {
+      const symbol = token.symbol ?? APP_CONSTANTS.UNKNOWN_SYMBOL;
       this.logger.error(
-        `Failed to update price for token ${token.id} (${token.symbol ?? 'UNKNOWN'}): ${
-          error.message
-        }`,
+        `Failed to update price for token ${token.id} (${symbol}): ${error.message}`,
         error.stack,
       );
       // не бросаем ошибку чтобы не останавливать весб прсесс

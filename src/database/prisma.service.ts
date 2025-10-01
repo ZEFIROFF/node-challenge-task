@@ -53,6 +53,7 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
 
     await this.$transaction(async (tx) => {
       await tx.outboxEvent.deleteMany();
+      await tx.tokenPrice.deleteMany();
       await tx.token.deleteMany();
       await tx.logo.deleteMany();
       await tx.chain.deleteMany();

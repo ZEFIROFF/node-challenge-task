@@ -52,9 +52,9 @@ export class TokenSeeder {
         }),
       ]);
 
-      await tx.token.createMany({
-        data: [
-          {
+      const tokens = await Promise.all([
+        tx.token.create({
+          data: {
             address: Buffer.from('0x0001020304050607080900000000000000000000', 'hex'),
             symbol: 'ETH',
             name: 'Ethereum',
@@ -65,9 +65,10 @@ export class TokenSeeder {
             isProtected: true,
             lastUpdateAuthor: 'Seeder',
             priority: 1,
-            price: 3000,
           },
-          {
+        }),
+        tx.token.create({
+          data: {
             address: Buffer.from('0x1011121314151617181900000000000000000000', 'hex'),
             symbol: 'BTC',
             name: 'Bitcoin',
@@ -78,9 +79,10 @@ export class TokenSeeder {
             isProtected: true,
             lastUpdateAuthor: 'Seeder',
             priority: 2,
-            price: 45000,
           },
-          {
+        }),
+        tx.token.create({
+          data: {
             address: Buffer.from('0x2021222324252627282900000000000000000000', 'hex'),
             symbol: 'SOL',
             name: 'Solana',
@@ -91,12 +93,21 @@ export class TokenSeeder {
             isProtected: true,
             lastUpdateAuthor: 'Seeder',
             priority: 3,
-            price: 150,
           },
+        }),
+      ]);
+
+      await tx.tokenPrice.createMany({
+        data: [
+          { tokenId: tokens[0].id, price: 3000 },
+          { tokenId: tokens[1].id, price: 45000 },
+          { tokenId: tokens[2].id, price: 150 },
         ],
       });
     });
 
-    this.logger.log('Initial data seeded successfully: 3 chains, 3 logos, 3 tokens created');
+    this.logger.log(
+      'Initial data seeded successfully: 3 chains, 3 logos, 3 tokens, 3 prices created',
+    );
   }
 }

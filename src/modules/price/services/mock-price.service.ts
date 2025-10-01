@@ -4,6 +4,7 @@ import { Token } from '@prisma/client';
 
 import { CircuitBreakerOptions, CircuitBreakerService } from '../../../common/circuit-breaker';
 import { circuitBreakerConfig } from '../../../common/config';
+import { APP_CONSTANTS } from '../../../common/constants';
 
 @Injectable()
 export class MockPriceService {
@@ -19,7 +20,7 @@ export class MockPriceService {
     this.circuitOptions = this.cbConfig.priceService;
   }
 
-  async getRandomPriceForToken(token: Token): Promise<number> {
+  async getRandomPriceForToken(token: Token, currentPrice: number): Promise<number> {
     try {
       return await this.circuitBreakerService.execute(
         this.circuitName,
@@ -33,20 +34,19 @@ export class MockPriceService {
       );
 
       // Возвращаем последнюю известную цену в случае ошибки, если ошибка не связана с ценой
-      this.logger.warn(`Returning last known price for ${token.symbol}: ${token.price}`);
-      return Number(token.price);
+      this.logger.warn(`Returning last known price for ${token.symbol}: ${currentPrice}`);
+      return currentPrice;
     }
   }
 
   private async fetchPrice(token: Token): Promise<number> {
-    // Симулируем случайные ошибки для тестирования circuit breaker, 10% вероятность ошибки
     if (Math.random() < 0.1) {
       throw new Error('Mock API temporary failure');
     }
     const delay = this.getRandomInt(50, 200);
     await this.sleep(delay);
 
-    const basePrice = this.getBasePriceBySymbol(token.symbol || 'UNKNOWN');
+    const basePrice = this.getBasePriceBySymbol(token.symbol || APP_CONSTANTS.UNKNOWN_SYMBOL);
     const volatilityFactor = this.getVolatilityFactor();
 
     const newPrice = Math.max(0, basePrice * volatilityFactor);

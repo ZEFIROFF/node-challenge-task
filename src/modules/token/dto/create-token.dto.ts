@@ -51,9 +51,6 @@ export class CreateTokenDto {
 
   @IsNumber()
   @Min(0)
+  @Max(32767)
   priority = 0;
-
-  @IsNumber()
-  @Min(0)
-  price = 0;
 }

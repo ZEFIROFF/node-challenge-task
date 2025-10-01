@@ -3,6 +3,8 @@ import { ConfigType } from '@nestjs/config';
 import { OutboxEvent, OutboxEventStatus } from '@prisma/client';
 
 import { kafkaConfig } from '../../../common/config';
+import { APP_CONSTANTS } from '../../../common/constants';
+import { PriceUpdateEventPayload, PrismaTransactionClient } from '../../../common/types';
 import { PrismaService } from '../../../database/prisma.service';
 
 @Injectable()
@@ -16,22 +18,16 @@ export class OutboxService {
   ) {}
 
   async createPriceUpdateEvent(
-    priceUpdateData: {
-      tokenId: string;
-      symbol: string;
-      oldPrice: number;
-      newPrice: number;
-      timestamp?: Date;
-    },
-    prismaTransaction?: Parameters<Parameters<PrismaService['$transaction']>[0]>[0],
+    priceUpdateData: PriceUpdateEventPayload,
+    prismaTransaction?: PrismaTransactionClient,
   ): Promise<OutboxEvent> {
     const prismaClient = prismaTransaction || this.prisma;
 
     const savedEvent = await prismaClient.outboxEvent.create({
       data: {
-        eventType: 'token.price.updated',
+        eventType: APP_CONSTANTS.PRICE_UPDATE_EVENT_TYPE,
         aggregateId: priceUpdateData.tokenId,
-        aggregateType: 'token',
+        aggregateType: APP_CONSTANTS.DEFAULT_AGGREGATE_TYPE,
         payload: {
           tokenId: priceUpdateData.tokenId,
           symbol: priceUpdateData.symbol,

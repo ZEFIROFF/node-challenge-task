@@ -23,7 +23,16 @@
 		"migration:create": "npm run typeorm -- migration:create",
 		"migration:run": "ts-node -r tsconfig-paths/register src/database/migrations/run-migrations.ts",
 		"migration:revert": "npm run typeorm -- migration:revert -d src/database/data-source.ts",
-		"db:seed": "ts-node -r tsconfig-paths/register src/database/seeders/seed.ts"
+		"db:seed": "ts-node -r tsconfig-paths/register src/database/seeders/seed.ts",
+		"prisma:generate": "prisma generate",
+		"prisma:migrate": "prisma migrate deploy",
+		"prisma:studio": "prisma studio",
+		"docker:build": "docker build -t token-price-service .",
+		"docker:dev": "docker-compose up -d",
+		"docker:prod": "docker-compose -f docker-compose.prod.yml up -d",
+		"docker:down": "docker-compose down",
+		"docker:logs": "docker-compose logs -f",
+		"ci": "npm run format:check && npm run lint:check && npm run build && npm run test:cov"
 	},
 	"keywords": [
 		"nestjs",
